@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voice Translation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: black;
+            color: white;
+        }
+        .btn-primary {
+            background-color: blue;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <h1 class="text-center mb-4">Voice Translator</h1>
+                <select id="languageSelect" class="form-select mb-4 w-auto mx-auto">
+                    {% for lang_code, lang_name in languages.items() %}
+                        <option value="{{ lang_code }}">{{ lang_name }}</option>
+                    {% endfor %}
+                </select>
+                
+                
+                
+                <button class="btn btn-primary btn-lg d-block mx-auto mb-4" onclick="startRecording()">Start Recording</button>
+                <p id="recognizedText" class="text-center"></p>
+                <p id="translatedText" class="text-center mt-3"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function startRecording() {
+            const selectedLanguage = document.getElementById('languageSelect').value;
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.start();
+
+            recognition.onresult = async function(event) {
+                const recognizedText = event.results[0][0].transcript;
+                document.getElementById('recognizedText').innerText = `Recognized Text: ${recognizedText}`;
+
+                const response = await fetch('/translate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: recognizedText, language: selectedLanguage })
+                });
+                const data = await response.json();
+                document.getElementById('translatedText').innerText = `Translated Text: ${data.translated_text}`;
+            };
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
